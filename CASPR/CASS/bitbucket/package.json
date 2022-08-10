@@ -1,0 +1,11 @@
+{
+  "name": "bitbucket-ci",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "atharvachincholkar@gmail.com",
+  "license": "MIT",
+  "dependencies": {
+    "node-fetch": "^2.6.7",
+    "openpgp": "^5.2.1"
+  }
+}

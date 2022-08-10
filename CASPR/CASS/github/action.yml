@@ -1,0 +1,24 @@
+name: 'Verification'
+description: 'Verify Commit signature'
+author: 'Atharva Chincholkar'
+
+inputs:
+  GITHUB_TOKEN:
+    description: 'Github Token'
+    required: true
+  ACCESS_TOKEN:
+    description: 'SERVER ACCESS TOKEN'
+    required: true
+  SERVER_API_URL:
+    description: 'SERVER API URL'
+    required: true
+  ref:
+    description: >
+      The commit reference to check. Defaults to HEAD, which will be the ref
+      checked out by `actions/checkout`.
+    required: false
+    default: "HEAD"
+
+runs:
+  using: 'node12'
+  main: 'dist/index.js'

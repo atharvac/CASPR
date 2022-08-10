@@ -1,0 +1,10 @@
+stages:
+  - verify
+
+verify-commit-job:    
+  tags:
+    - local
+  stage: verify
+  script:
+    - npm install
+    - git show --pretty=raw -s $CI_COMMIT_SHA | node index.js

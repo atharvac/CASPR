@@ -1,0 +1,26 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+flask = "*"
+flask-sqlalchemy = "*"
+flask-migrate = "*"
+flask-debugtoolbar = "*"
+bcrypt = "*"
+flask-wtf = "*"
+flask-login = "*"
+werkzeug = "~=2.1.0"
+psycopg2 = "*"
+cerberus = "*"
+gunicorn = "*"
+
+[dev-packages]
+black = "*"
+
+[requires]
+python_version = "3.9"
+
+[pipenv]
+allow_prereleases = true

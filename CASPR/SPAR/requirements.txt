@@ -1,0 +1,11 @@
+Flask
+Flask-SQLAlchemy
+Flask-Migrate
+flask-debugtoolbar
+bcrypt
+flask-wtf
+flask-login
+werkzeug==2.1.0
+psycopg2
+cerberus
+gunicorn

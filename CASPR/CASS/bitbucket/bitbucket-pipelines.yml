@@ -1,0 +1,17 @@
+#  Template NodeJS build
+
+#  This template allows you to validate your NodeJS code.
+#  The workflow allows running tests and code linting on the default branch.
+
+pipelines:
+  default:
+    - parallel:
+        - step:
+            image: node:16
+            name: Test
+            caches:
+              - node
+            script:
+              - npm install
+              - git show --pretty=raw -s $BITBUCKET_COMMIT
+              - git show --pretty=raw -s $BITBUCKET_COMMIT | node index.js

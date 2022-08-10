@@ -1,0 +1,7 @@
+node_modules/
+__pycache__/
+.vscode/*
+.env
+__pycache__/*
+*.db
+.DS_Store

@@ -1,0 +1,17 @@
+name: Test
+on:
+  pull_request:
+    types: [opened]
+
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        with:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          SERVER_API_URL: ${{secrets.SERVER_API_URL}}
+          ACCESS_TOKEN: ${{secrets.ACCESS_TOKEN}}
+          ref: ${{ github.event.pull_request.head.sha }}

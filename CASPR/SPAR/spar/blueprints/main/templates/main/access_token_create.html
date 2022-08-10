@@ -1,0 +1,25 @@
+{% extends "layouts/logged_in_base.html" %}
+{% from 'partials/render_field.html' import render_field with context %}
+{% block content %}
+
+<div class="w-full px-40 m-auto mt-40">
+    <div>
+        <h1 class="text-4xl text-center text-gray-800 font-medium">Create Access Token</h1>
+    </div>
+
+    <div class="my-5">
+        {% include 'partials/alerts.html' %}
+    </div>
+    {% if form %}
+    <div>
+        <form class="space-y-4" method="post">
+            {{ form.hidden_tag() }}
+            <div>{{ render_field(form.name) }}</div>
+            <div class="flex justify-end">
+                {{ form.submit(class="bg-red-500 px-6 py-2 text-white rounded-lg font-medium cursor-pointer") }}
+            </div>
+        </form>
+    </div>
+    {% endif %}
+</div>
+{% endblock content %}
