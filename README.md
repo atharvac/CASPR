@@ -138,5 +138,33 @@ Follow the documentation for whichever remote repository you are using.
      - git show --pretty=raw -s $BITBUCKET_COMMIT | node folder/index.js
 ```
 
+## Usage (CASPR)
+1) Configure your git repository to use commit signing
+```bash
+git config --local user.signingkey <Fingerprint from gpg>
+# Use gpg --list-keys to get your fingerprint
+```
+2) Configure email
+```bash
+git config --local user.email <email>
+```
+3) Setup gpg to be used for signing
+```bash
+git config --local gpg.program <path-to-gpg>
+# git config --local gpg.program /opt/homebrew/bin/gpg
+```
+4) Make sure every commit will be signed
+```bash
+git config --local commit.gpgsign true
+# Alternately you can sign each commit manually using the -S flag
+# E.g. git commit -S -m "Signed commit"
+```
+5) Try to sign a new commit, and push to the remote for verification.
+```bash
+git add <changed_file>
+git commit -m "Signed commit"
+```
+6) Check your remote repository CI/CD process. The commit will be verified.
+
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
