@@ -27,3 +27,16 @@ class AccessTokens(db.Model):
                 return {"Error": "Access Token is invalid"}, 401
             return func(*args, **kwargs)
         return wrapper
+    
+
+    @staticmethod
+    def access_token_required_return(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            access_token_req = request.headers.get("Access-Token")
+            access_token_hash = sha256(access_token_req.encode()).hexdigest()
+            access_token = AccessTokens.query.filter_by(access_token=access_token_hash).first()
+            if not access_token:
+                return {"Error": "Access Token is invalid"}, 401
+            return func(access_token, *args, **kwargs)
+        return wrapper

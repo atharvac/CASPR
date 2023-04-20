@@ -64,6 +64,10 @@
                                 {% if current_user.is_admin %}
                                 <a href="{{ url_for('main.create_access_token') }}"
                                     class="{% if url_for('main.create_access_token') == request.path %}bg-gray-900 text-white {% else %} text-gray-800 hover:bg-gray-700 hover:text-white {% endif %}  px-3 py-2 rounded-md text-sm font-medium">Create Access Token</a>
+                                <a href="{{ url_for('audit_logs.index') }}"
+                                    class="{% if url_for('audit_logs.index') == request.path %}bg-gray-900 text-white {% else %} text-gray-800 hover:bg-gray-700 hover:text-white {% endif %}  px-3 py-2 rounded-md text-sm font-medium">Logs</a>
+                                <a href="{{ url_for('signing_keys.index') }}"
+                                    class="{% if url_for('signing_keys.index') == request.path %}bg-gray-900 text-white {% else %} text-gray-800 hover:bg-gray-700 hover:text-white {% endif %}  px-3 py-2 rounded-md text-sm font-medium">Signing Keys</a>
                                 {% endif %}
                             </div>
                         </div>
@@ -91,6 +95,9 @@
                     <a href="{{ url_for('main.create_access_token') }}"
                         class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Create Access Token</a>
 
+                    <a href="{{ url_for('audit_logs.index') }}"
+                        class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Logs</a>
+
                     <a href="{{ url_for('main.logout') }}"
                         class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Logout</a>
 
@@ -106,7 +113,9 @@
     </div>
 
     <!-- js -->
-    <script src="{{ url_for('static', filename='build/js/alpine.js') }}" defer></script>
+    <script src="//unpkg.com/alpinejs" defer></script>
+    {% block extra_js %}
+    {% endblock %}
 
 </body>
 

@@ -2,10 +2,13 @@ from flask import Blueprint, render_template, request
 from spar.models import AccessTokens
 from cerberus import Validator
 from .json_request_schema import (
-    upload_signing_key_request, remove_signing_key_request, get_signing_key_request
+    upload_signing_key_request, remove_signing_key_request, get_signing_key_request,
+    ci_cass_status
 )
+from spar.models.audit_logs import AuditLog
 from spar.models import SigningKeys
 from spar import db
+from hashlib import sha256
 
 api = Blueprint(
     "api",
@@ -34,6 +37,14 @@ def upload_signing_key():
 
         _key = SigningKeys.query.filter_by(fingerprint=fingerprint).first()
         if _key:
+            AuditLog.log(
+                f"{email}",
+                "signing_key.upload",
+                "failure",
+                f"Signing key upload failed, already exists. fingerprint: {fingerprint}",
+                request.access_route
+            )
+            db.session.commit()
             return (
                 {   
                     "status": "failure",
@@ -46,6 +57,13 @@ def upload_signing_key():
         )
 
         db.session.add(signing_key)
+        AuditLog.log(
+            f"{email}",
+            "signing_key.upload",
+            "success",
+            f"Signing key uploaded, fingerprint: {fingerprint}",
+            request.access_route
+        )
         db.session.commit()
         return (
             {
@@ -55,6 +73,14 @@ def upload_signing_key():
             200
         )
 
+    AuditLog.log(
+        f"{email}",
+        "signing_key.upload",
+        "failure",
+        f"Signing key upload failed, invalid request. fingerprint: {fingerprint}",
+        request.access_route
+    )
+    db.session.commit()
     return (
         {
             "status": "failure",
@@ -64,8 +90,8 @@ def upload_signing_key():
     )
 
 @api.route("/signing-key-remove", methods=['POST'])
-@AccessTokens.access_token_required
-def remove_signing_key():
+@AccessTokens.access_token_required_return
+def remove_signing_key(access_token):
     request_data = request.get_json()
     v = Validator(remove_signing_key_request)
     if v.validate(request_data):
@@ -73,6 +99,14 @@ def remove_signing_key():
 
         _key = SigningKeys.query.filter_by(fingerprint=fingerprint).first()
         if not _key:
+            AuditLog.log(
+                f"{access_token.name}",
+                "signing_key.remove",
+                "failure",
+                f"Signing key not found. fingerprint: {fingerprint}",
+                request.access_route
+            )
+            db.session.commit()
             return (
                 {   
                     "status": "failure",
@@ -80,6 +114,13 @@ def remove_signing_key():
                 },
                 400
             )
+        AuditLog.log(
+            f"{access_token.name}",
+            "signing_key.remove",
+            "success",
+            f"Signing key removed. fingerprint: {fingerprint}",
+            request.access_route
+        )
         db.session.delete(_key)
         db.session.commit()
 
@@ -100,13 +141,21 @@ def remove_signing_key():
     )
 
 @api.route("/get-signing-key", methods=['POST'])
-@AccessTokens.access_token_required
-def get_signing_key():
+@AccessTokens.access_token_required_return
+def get_signing_key(access_token):
     request_data = request.get_json()
     v = Validator(get_signing_key_request)
     if v.validate(request_data):
         keyid = request_data["keyid"].strip().lower()
         if len(keyid) < 16:
+            AuditLog.log(
+                f"{access_token.name}",
+                "signing_key.request",
+                "failure",
+                f"Signing key not found. key ID: {keyid}",
+                request.access_route
+            )
+            db.session.commit()
             return (
                 {   
                     "status": "failure",
@@ -119,6 +168,14 @@ def get_signing_key():
         ).first()
 
         if _key:
+            AuditLog.log(
+                f"{access_token.name}",
+                "signing_key.request",
+                "success",
+                f"Public key sent successfully. key ID: {keyid}",
+                request.access_route
+            )
+            db.session.commit()
             return (
                 {
                     "status": "success",
@@ -127,6 +184,14 @@ def get_signing_key():
                 200
             )
         else:
+            AuditLog.log(
+                f"{access_token.name}",
+                "signing_key.request",
+                "failure",
+                f"Signing key not found. key ID: {keyid}",
+                request.access_route
+            )
+            db.session.commit()
             return (
                 {   
                     "status": "failure",
@@ -141,4 +206,44 @@ def get_signing_key():
         },
         400
     )
+
+
+
+@api.route("/ci-status", methods=['POST'])
+@AccessTokens.access_token_required
+def ci_status():
+    request_data = request.get_json()
+    v = Validator(ci_cass_status)
+    if v.validate(request_data):
+        status = request_data.get("status")
+        keyid = request_data.get("keyid")
+        email = request_data.get("email")
+
+        if status == "success":
+            AuditLog.log(
+                email,
+                "ci.result",
+                status,
+                f"CI pipeline passed. Key ID: {keyid}",
+                request.access_route
+            )
+        else:
+            AuditLog.log(
+                email,
+                "ci.result",
+                status,
+                f"CI pipeline failed. Key ID: {keyid}",
+                request.access_route
+            )
+        db.session.commit()
+        return ({"status": "success"}, 200)       
+    
+    return (
+        {
+            "status": "failure",
+            "data": {"message": "Schema validation error"}
+        },
+        400 
+    )
+
 # add your routes here

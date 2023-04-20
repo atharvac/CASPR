@@ -11,6 +11,7 @@ class Config:
     )
     SQLALCHEMY_DATABASE_URI = os.environ.get("DB_URL")
     FLASK_APP = "wsgi.py"
+    DEBUG_TB_INTERCEPT_REDIRECTS = False
     DEBUG = False
     TESTING = False
 

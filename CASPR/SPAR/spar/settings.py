@@ -6,7 +6,9 @@ import importlib
 REGISTER_BLUEPRINTS = [
     "spar.blueprints.error_pages",
     "spar.blueprints.main",
-    "spar.blueprints.api"
+    "spar.blueprints.api",
+    "spar.blueprints.audit_logs",
+    "spar.blueprints.signing_keys",
     # Add your blueprint name to register
 ]
 

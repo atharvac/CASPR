@@ -1,8 +1,9 @@
 from os import access
-from flask import Blueprint, redirect, render_template, url_for, flash
+from flask import Blueprint, redirect, render_template, url_for, flash, request
 from .forms import AdminRegisterForm, AdminLoginForm, AccessTokenForm
 from spar.models.admin import Admin
 from spar.models.access_tokens import AccessTokens
+from spar.models.audit_logs import AuditLog
 import bcrypt
 from spar import db
 from flask_login import login_user, login_required, logout_user
@@ -38,8 +39,15 @@ def create_access_token():
             access_token=sha256(generated_token.encode()).hexdigest()
         )
         db.session.add(access_token)
+        AuditLog.log(
+            "Admin",
+            "acess_token.create",
+            "success",
+            f"Created a new access token: {form.name.data}",
+            request.access_route
+        )
         db.session.commit()
-        flash(f"Access Token:{generated_token}", "success")
+        flash(f"Access Token: {generated_token}", "success")
         return redirect(url_for("main.index"))
     return render_template("main/access_token_create.html", form=form, title="Login") 
 
@@ -50,6 +58,13 @@ def create_access_token():
 def remove_access_token(token_hash):
     access_token = AccessTokens.query.filter_by(access_token=token_hash).first()
     db.session.delete(access_token)
+    AuditLog.log(
+        "Admin",
+        "acess_token.remove",
+        "success",
+        f"Removed access token: {access_token.name}",
+        request.access_route
+    )
     db.session.commit()
     flash("Removed access token!", "success")
     return redirect(url_for("main.index"))

@@ -57,6 +57,7 @@ async function run(){
         const GITHUB_TOKEN = core.getInput('GITHUB_TOKEN');
         const SERVER_API_URL = core.getInput('SERVER_API_URL');
         const ACCESS_TOKEN = core.getInput('ACCESS_TOKEN');
+        const LOGGING_URL = SERVER_API_URL.split("api")[0] + "api/ci-status";
 
         const octokit = github.getOctokit(GITHUB_TOKEN);
 
@@ -72,14 +73,28 @@ async function run(){
         if (commit.data.verification.reason != "valid"){
             throw new Error("Authorization Failed!");
         }
-        var KeyID = await getSignatureKeyID(commit.data.verification.signature);
+        const payload = commit.data.verification.payload;
+        try {
+            var KeyID = await getSignatureKeyID(commit.data.verification.signature);
+        } catch (error) {
+            let logData = {
+                "keyid": "No signature found!",
+                "email": payload.match(/(?<=\<)[^\>[]*(?=>)/g)[0],
+                "status": "failure"
+            };
+            let resp = await fetch_data(logData, LOGGING_URL, ACCESS_TOKEN);
+            throw new Error("Signature not found!");
+        }
         core.info("KeyID: " + KeyID);
-
 
         let data = {
             "keyid": KeyID
         }
         let api = SERVER_API_URL;
+        let logData = {
+            "keyid": KeyID,
+            "email": payload.match(/(?<=\<)[^\>[]*(?=>)/g)[0]
+        };
 
         let server_response = await fetch_data(data, api, ACCESS_TOKEN);
         if (server_response.status == "success"){
@@ -90,10 +105,14 @@ async function run(){
                 commit.data.verification.payload
             )
             if (isVerified){
+                logData["status"] = "success";
                 core.info("Commit verified successfully!");
+                let resp = await fetch_data(logData, LOGGING_URL, ACCESS_TOKEN);
             }
         }
         else {
+            logData["status"] = "failure";
+            let resp = await fetch_data(logData, LOGGING_URL, ACCESS_TOKEN);
             throw new Error(`\nServer rejected the key.`);
         }
         

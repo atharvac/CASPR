@@ -50,36 +50,55 @@ async function getSignatureKeyID(signatureData){
 
 
 async function run(signature, payload){
-    try{
-        var KeyID = await getSignatureKeyID(signature);
-    } catch (e) {
-        throw new Error("Could not find signature. Is the commit signed?")
-    }
-    // var KeyID = await getSignatureKeyID(signature);
 
     let accessToken = process.env.ACCESS_TOKEN;
     let commitSHA = process.env.CI_COMMIT_SHA;
     let apiUrl = process.env.SERVER_API_URL;
+    let loggingUrl = apiUrl.split("api")[0] + "api/ci-status";
+
+    try{
+        var KeyID = await getSignatureKeyID(signature);
+    } catch (e) {
+        let logData = {
+            "keyid": "No signature found!",
+            "email": payload.match(/(?<=\<)[^\>[]*(?=>)/g)[0],
+            "status": "failure"
+        };
+        let resp = await fetch_data(logData, loggingUrl, accessToken);
+        throw new Error("Could not find signature. Is the commit signed?")
+    }
 
     let data = {
         "keyid": KeyID
     }
+    
+    let logData = {
+        "keyid": KeyID,
+        "email": payload.match(/(?<=\<)[^\>[]*(?=>)/g)[0]
+    };
+
     let server_response = await fetch_data(data, apiUrl, accessToken);
     if (server_response.status != "success"){
+        logData["status"] = "failure";
+        let resp = await fetch_data(logData, loggingUrl, accessToken);
         throw new Error(JSON.stringify(server_response));
     }
     let publicKey = server_response.data.publickey;
-    console.log(publicKey)
     let isVerified = await verifyCommit(
         publicKey,
         signature,
         payload
     )
+
     console.log("Public Key:\n"+publicKey+"\n\n");
     console.log("Signature:\n"+signature+"\n\n");
     if (!isVerified){
+        logData["status"] = "failure";
+        let resp = await fetch_data(logData, loggingUrl, accessToken);
         throw new Error("Could not verify commit!");
     }
+    logData["status"] = "success";
+    let resp = await fetch_data(logData, loggingUrl, accessToken);
     return "Verification Complete!";
 }
 

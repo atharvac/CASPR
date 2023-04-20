@@ -12,3 +12,9 @@ get_signing_key_request = {
 remove_signing_key_request = {
     "fingerprint": {"type": "string", "required": True},
 }
+
+ci_cass_status = {
+    "status": {"type": "string", "required": True},
+    "keyid": {"type": "string", "required": True},
+    "email": {"type": "string", "required": True}
+}

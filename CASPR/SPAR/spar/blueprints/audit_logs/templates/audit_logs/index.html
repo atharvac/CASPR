@@ -1,0 +1,217 @@
+{% extends "layouts/logged_in_base.html" %}
+
+{% block content %}
+<div class="w-full px-20 m-auto mt-10">
+<div>
+    <h1 class="text-4xl text-left text-gray-800 font-medium">Logs</h1>
+</div>
+<div x-data="{sideOverlay: false}">
+    <div class="my-8">
+        <div class="flex flex-col">
+            <div class="shadow overflow-hidden border-b border-gray-200 rounded-xl">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Description
+                            </th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Event
+                            </th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Status
+                            </th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Event Time
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% if audit_logs %}
+                        {% for log in audit_logs.items %}
+
+                        <tr class="cursor-pointer" @click="$store.auditLog.getLog('{{log.id}}');sideOverlay = true; $store.auditLog.activeLog = '{{ log.id }}' ">
+                            <td class="px-6 py-4 whitespace-nowrap" :class="{'border-l-4 border-primary': $store.auditLog.activeLog == '{{log.id}}'}">
+                                <div class="text-sm font-medium text-gray-900">{{ log.message }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ log.event }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if log.outcome == "success" %}
+                                <span
+                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 uppercase">
+                                    success
+                                </span>
+                                {% elif log.outcome == "failure" %}
+                                <span
+                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 uppercase">
+                                    failure
+                                </span>
+                                {% endif %}
+
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ log.created_at.strftime("%d/%m/%Y, %H:%M:%S") }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="bg-white">
+                        <tr>
+                            <th scope="col" colspan="4" class="px-6 py-4 text-sm font-medium text-gray-600">
+                                <div class="flex justify-between">
+                                    <p>{{total_count }} items</p>
+                                    <div>
+                                        <nav>
+                                            <ul class="flex space-x-6">
+                                                {% if audit_logs.has_prev %}
+                                                <li class="page-item">
+                                                    <a class="page-link"
+                                                        href="{{url_for('audit_logs.index', page=audit_logs.prev_num)}}">Previous</a>
+                                                </li>
+                                                {% else %}
+                                                <li class="text-gray-400 disabled cursor-not-allowed">
+                                                    <span class="page-link">Previous</span>
+                                                </li>
+                                                {% endif %}
+                                                {% if audit_logs.has_next %}
+                                                <li class="page-item">
+                                                    <a class="page-link"
+                                                        href="{{url_for('audit_logs.index', page=audit_logs.next_num)}}">Next</a>
+                                                </li>
+                                                {% else %}
+                                                <li class="text-gray-400 disabled cursor-not-allowed">
+                                                    <span class="page-link">Next</span>
+                                                </li>
+                                                {%endif%}
+                                            </ul>
+                                        </nav>
+                                    </div>
+                                </div>
+                            </th>
+                        </tr>
+                    </tfoot>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Start Overlay -->
+    <div x-show="sideOverlay"
+        class="bg-white fixed w-1/4 shadow-md top-0 right-0 mr-5 my-5 bottom-0 rounded-lg p-6">
+        <div class="flex items-center justify-between">
+            <h2 class="text-2xl font-semibold text-gray-800">Event Detail</h2>
+            <svg xmlns="http://www.w3.org/2000/svg" @click="sideOverlay = false; $store.auditLog.activeLog = ''"
+                class="h-7 w-7 text-gray-600 cursor-pointer hover:text-gray-800" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </div>
+        <div class="mt-20">
+            <div class="space-y-8">
+                <div class="flex flex-col">
+                    <h5 class="font-medium text-gray-600 uppercase text-sm">Actor</h5>
+                    <p class="text-gray-800 font-medium break-words" x-text="$store.auditLog.actor">Actor goes here</p>
+                </div>
+                <div class="flex flex-col">
+                    <h5 class="font-medium text-gray-600 uppercase text-sm">Event</h5>
+                    <p class="text-gray-800 font-medium break-words" x-text="$store.auditLog.event">Actor goes here</p>
+                </div>
+                <div class="flex flex-col">
+                    <h5 class="font-medium text-gray-600 uppercase text-sm">Outcome</h5>
+                    <p class="text-gray-800 font-medium break-words"><span x-show="$store.auditLog.outcome == 'success'"
+                            class="text-green-700 font-semibold ">
+                            Success
+                        </span>
+                        <span x-show="$store.auditLog.outcome == 'failure'"
+                            class="text-red-700 font-semibold ">
+                            Failure
+                        </span>
+                    </p>
+                </div>
+                <div class="flex flex-col">
+                    <h5 class="font-medium text-gray-600 uppercase text-sm">Description</h5>
+                    <p class="text-gray-800 font-medium break-words" x-text="$store.auditLog.description">Actor goes
+                        here</p>
+                </div>
+                <div x-show="$store.auditLog.application_data_log != null;" class="flex flex-col">
+                    <h5 class="font-medium text-gray-600 uppercase text-sm">Application</h5>
+                    <a x-bind:href="$store.auditLog.application_data_log['url']" class="text-primary font-medium break-words" x-text="$store.auditLog.application_data_log['name']"></a>
+                </div>
+                <div class="flex flex-col">
+                    <h5 class="font-medium text-gray-600 uppercase text-sm">IP Address</h5>
+                    <p class="text-gray-800 font-medium break-words" x-text="$store.auditLog.ip_address">Actor goes here
+                    </p>
+                </div>
+                <div class="flex flex-col">
+                    <h5 class="font-medium text-gray-600 uppercase text-sm">Event Time</h5>
+                    <p class="text-gray-800 font-medium break-words" x-text="$store.auditLog.timestamp">Actor goes here
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+<!-- End Overlay -->
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+
+    document.addEventListener('alpine:init', () => {
+        Alpine.store('auditLog', {
+            activeLog: '',
+            actor: '',
+            event: '',
+            outcome: '',
+            description: '',
+            ip_address: '',
+            timestamp: '',
+            application_data_log: null,
+
+            getLog(id) {
+                fetch("/logs/detail/" + id)
+                    .then(resp => { return resp.json() })
+                    .then(data => {
+                        if (data['status'] === "success") {
+                            this.actor = data['data']['actor'];
+                            this.event = data['data']['event'];
+                            this.outcome = data['data']['outcome'];
+                            this.description = data['data']['message'];
+                            this.ip_address = data['data']['ip_address'];
+                            this.timestamp = data['data']['timestamp'];
+                            
+
+                            // DataLog
+                            if(data['data']['application_data_log']) {
+                                this.application_data_log = data['data']['application_data_log'];
+                                console.log(this.application_data_log['name']);
+                            }
+                            else{
+                                this.application_data_log = null;
+                            }
+
+                            console.log(data['data'])
+                        }
+                    })
+            }
+        })
+    })
+    // async function getLogDetail(id) {
+    //     await fetch("/organizations/audit-logs/detail/" + id)
+    //         .then(resp => { return resp.json() })
+    //         .then(data => {
+    //             if (data['status'] === "success") {
+
+    //             }
+    //         })
+    // }
+</script>
+{% endblock %}
